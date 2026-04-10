@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DiagHOI – Failure Modes in Two-Stage HOI Detection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0e0f13;
+      --surface: #16181f;
+      --surface2: #1e2029;
+      --border: #2a2d3a;
+      --accent: #e8c97a;
+      --accent2: #7ab8e8;
+      --text: #e8e9f0;
+      --muted: #8b8fa8;
+      --link: #7ab8e8;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 80px 24px 48px;
+      text-align: center;
+    }
+
+    .venue-badge {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 4px;
+      padding: 4px 12px;
+      margin-bottom: 28px;
+      opacity: .85;
+    }
+
+    .hero h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(28px, 5vw, 46px);
+      font-weight: 400;
+      line-height: 1.18;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .tagline {
+      font-size: 17px;
+      color: var(--muted);
+      max-width: 560px;
+      margin: 0 auto 36px;
+    }
+
+    /* authors */
+    .authors {
+      font-size: 14.5px;
+      color: var(--muted);
+      line-height: 2;
+      margin-bottom: 8px;
+    }
+    .authors a { color: var(--link); text-decoration: none; }
+    .authors a:hover { text-decoration: underline; }
+    .equal-note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .affiliations {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    /* buttons */
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 56px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: opacity .15s, transform .15s;
+      cursor: pointer;
+    }
+    .btn:hover { opacity: .82; transform: translateY(-1px); }
+    .btn-primary { background: var(--accent); color: #0e0f13; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+
+    /* ── CONTENT ── */
+    .content {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    hr.divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 48px 0;
+    }
+
+    /* teaser */
+    .teaser-img {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      margin-bottom: 14px;
+      display: block;
+    }
+    .caption {
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    /* section headings */
+    h2 {
+      font-family: 'DM Serif Display', serif;
+      font-weight: 400;
+      font-size: 26px;
+      color: #fff;
+      margin-bottom: 18px;
+    }
+
+    p { color: var(--text); margin-bottom: 14px; }
+    p:last-child { margin-bottom: 0; }
+
+    /* abstract box */
+    .abstract-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 8px;
+      padding: 28px 32px;
+      font-size: 15.5px;
+      line-height: 1.8;
+    }
+
+    /* two-col figures */
+    .fig-row {
+      display: grid;
+      gap: 20px;
+    }
+    .fig-row.cols-2 { grid-template-columns: 1fr 1fr; }
+    @media (max-width: 600px) { .fig-row.cols-2 { grid-template-columns: 1fr; } }
+
+    .fig-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .fig-card img {
+      width: 100%;
+      display: block;
+    }
+    .fig-card .fig-caption {
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* taxonomy diagram */
+    .taxonomy-img {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      display: block;
+    }
+
+    /* findings cards */
+    .findings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 4px;
+    }
+    .finding-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 20px 16px;
+    }
+    .finding-card .icon {
+      font-size: 22px;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .finding-card h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent2);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .finding-card p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    /* models table */
+    .models-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 6px;
+    }
+    .model-pill {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-size: 14px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent2);
+    }
+
+    /* BibTeX */
+    .bibtex-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 22px 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--muted);
+      white-space: pre-wrap;
+      word-break: break-all;
+      position: relative;
+    }
+    .bibtex-key { color: var(--accent); }
+    .bibtex-val { color: var(--accent2); }
+
+    /* footer */
+    footer {
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 28px 24px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    footer a { color: var(--link); text-decoration: none; }
+
+    /* acknowledgment */
+    .ack {
+      font-size: 14px;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px 22px;
+      line-height: 1.65;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <div class="venue-badge">CVPR 2026 Workshop</div>
+
+  <h1>A Study of Failure Modes in<br><em>Two-Stage Human–Object Interaction Detection</em></h1>
+  <p class="tagline">Why do HOI models break down — and where does aggregate mAP hide the problem?</p>
+
+  <p class="equal-note">* Equal Contribution</p>
+  <p class="authors">
+    <a href="#">Lemeng Wang</a>*&thinsp;<sup>1</sup>,&nbsp;
+    <a href="#">Qinqian Lei</a>*&thinsp;<sup>2</sup>,&nbsp;
+    <a href="#">Vidhi Bakshi</a><sup>1</sup>,&nbsp;
+    <a href="#">Daniel Yi</a><sup>1</sup>,&nbsp;
+    <a href="#">Yifan Liu</a><sup>1</sup>,&nbsp;
+    <a href="#">Jiacheng Hou</a><sup>1</sup>,<br>
+    <a href="#">Zheda Mai</a><sup>1</sup>,&nbsp;
+    <a href="#">Asher Seng Hao</a><sup>4</sup>,&nbsp;
+    <a href="#">Wei-Lun Chao</a><sup>3</sup>,&nbsp;
+    <a href="#">Robby T. Tan</a><sup>2</sup>,&nbsp;
+    <a href="#">Bo Wang</a><sup>5</sup>
+  </p>
+  <p class="affiliations">
+    <sup>1</sup>The Ohio State University &nbsp;·&nbsp;
+    <sup>2</sup>National University of Singapore &nbsp;·&nbsp;
+    <sup>3</sup>Boston University<br>
+    <sup>4</sup>Independent Researcher &nbsp;·&nbsp;
+    <sup>5</sup>University of Mississippi
+  </p>
+
+  <div class="btn-row">
+    <a href="DiagHOI_CVPR26_workshop.pdf" class="btn btn-primary">
+      📄 Paper
+    </a>
+    <a href="#" class="btn btn-outline">
+      💻 Code (coming soon)
+    </a>
+    <a href="#bibtex" class="btn btn-outline">
+      📑 BibTeX
+    </a>
+  </div>
+</div>
+
+<!-- ── CONTENT ── -->
+<div class="content">
+
+  <!-- Teaser -->
+  <img src="idea_example_v3_cropped.pdf" class="teaser-img" alt="Qualitative examples of HOI failure modes"
+       onerror="this.style.display='none'">
+  <!-- fallback: use the PNG from the paper if PDF doesn't render -->
+  <p class="caption" style="margin-bottom:48px;">
+    Figure 1. Representative failure modes across four scene configurations — 
+    <em>object confusion, interaction confusion</em>, and <em>pairing confusion</em> 
+    — all invisible under standard mAP evaluation.
+  </p>
+
+  <hr class="divider">
+
+  <!-- Abstract -->
+  <h2>Abstract</h2>
+  <div class="abstract-box">
+    <p>Human–object interaction (HOI) detection aims to detect interactions between humans and objects in images. While recent advances have improved performance on existing benchmarks, their evaluations mainly focus on overall prediction accuracy and provide limited insight into the underlying causes of model failures. In particular, modern models often struggle in complex scenes involving multiple people and rare interaction combinations.</p>
+    <p style="margin-top:12px;">In this work, we present a study to better understand the failure modes of two-stage HOI models. Rather than constructing a large-scale benchmark, we decompose HOI detection into multiple interpretable perspectives and analyze model behavior across these dimensions to study different types of failure patterns. We curate a subset of images from HICO-DET organized by human–object–interaction configurations, and analyze model behavior under these configurations. Importantly, <strong style="color:#fff;">high overall benchmark performance does not necessarily reflect robust visual reasoning about human–object relationships.</strong></p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Taxonomy -->
+  <h2>Dataset Taxonomy</h2>
+  <p>We reorganize the HICO-DET test set into structured subsets that capture different types of ambiguity in human–object interaction configurations. Images are first split by single-person vs. multi-person scenes, then further subdivided along two axes: <em>object relation</em> (same vs. different object instances) and <em>interaction relation</em> (same vs. different interactions), yielding eight categories total.</p>
+
+  <div style="margin: 24px 0;">
+    <!-- Taxonomy diagram - PDF embed fallback to descriptive layout -->
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:28px;">
+      <div style="display:grid; grid-template-columns:1fr 2fr; gap:24px; align-items:start;">
+        <div>
+          <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:16px;">
+            <div style="font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--accent); font-weight:600; margin-bottom:10px;">Single-Person</div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="background:rgba(122,184,232,.1); border:1px solid rgba(122,184,232,.25); border-radius:5px; padding:8px 12px; font-size:13.5px;"><strong style="color:var(--accent2);">SPSO</strong> — Single Object</div>
+              <div style="background:rgba(122,184,232,.1); border:1px solid rgba(122,184,232,.25); border-radius:5px; padding:8px 12px; font-size:13.5px;"><strong style="color:var(--accent2);">SPMO</strong> — Multi Object</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:16px;">
+            <div style="font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--accent); font-weight:600; margin-bottom:10px;">Multi-Person</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+              <div style="background:rgba(232,201,122,.07); border:1px solid rgba(232,201,122,.2); border-radius:5px; padding:8px 12px; font-size:13px;"><strong style="color:var(--accent);">A</strong> Same Obj · Same Interaction</div>
+              <div style="background:rgba(232,201,122,.07); border:1px solid rgba(232,201,122,.2); border-radius:5px; padding:8px 12px; font-size:13px;"><strong style="color:var(--accent);">B</strong> Same Obj · Diff Interaction</div>
+              <div style="background:rgba(232,201,122,.07); border:1px solid rgba(232,201,122,.2); border-radius:5px; padding:8px 12px; font-size:13px;"><strong style="color:var(--accent);">C</strong> Diff Obj (Same Label) · Same</div>
+              <div style="background:rgba(232,201,122,.07); border:1px solid rgba(232,201,122,.2); border-radius:5px; padding:8px 12px; font-size:13px;"><strong style="color:var(--accent);">D</strong> Diff Obj (Same Label) · Diff</div>
+              <div style="background:rgba(100,100,100,.07); border:1px solid rgba(100,100,100,.2); border-radius:5px; padding:8px 12px; font-size:13px; color:var(--muted);"><strong>E</strong> Diff Obj (Diff Label) · Same</div>
+              <div style="background:rgba(100,100,100,.07); border:1px solid rgba(100,100,100,.2); border-radius:5px; padding:8px 12px; font-size:13px; color:var(--muted);"><strong>F</strong> Diff Obj (Diff Label) · Diff</div>
+            </div>
+            <p style="font-size:12px; color:var(--muted); margin-top:10px; margin-bottom:0;">Categories E &amp; F are rare in HICO-DET (1 and 9 images respectively).</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Results -->
+  <h2>Results</h2>
+  <p>We evaluate four representative two-stage HOI detection models across our structured subsets. All models use official checkpoints without additional fine-tuning.</p>
+
+  <div class="models-row" style="margin-bottom:28px;">
+    <span class="model-pill">ADA-CM</span>
+    <span class="model-pill">CMMP</span>
+    <span class="model-pill">HOLa</span>
+    <span class="model-pill">LAIN</span>
+  </div>
+
+  <div class="fig-row cols-2" style="margin-bottom:20px;">
+    <div class="fig-card">
+      <img src="single_person_distribution.png" alt="Single-person distribution (SPSO vs SPMO)">
+      <div class="fig-caption">Figure 3a. SPSO dominates with 5,897 images; SPMO contains only 227. Standard mAP is largely influenced by the simpler SPSO setting.</div>
+    </div>
+    <div class="fig-card">
+      <img src="multi_person_category_distribution.png" alt="Multi-person category distribution A-F">
+      <div class="fig-caption">Figure 3b. Multi-person category distribution (A–F). Categories A and C are largest; E and F are rare by natural data distribution.</div>
+    </div>
+  </div>
+
+  <div class="fig-row cols-2">
+    <div class="fig-card">
+      <img src="single_vs_multi_person_map.png" alt="mAP: Single-person vs Multi-person">
+      <div class="fig-caption">Figure 4. All four models show a consistent performance drop in multi-person settings, confirming increased scene complexity.</div>
+    </div>
+    <div class="fig-card">
+      <img src="map_across_categories.png" alt="mAP across categories A-D, SPSO, SPMO">
+      <div class="fig-caption">Figure 5. Category C consistently shows the lowest mAP across all models — a systematic error tied to instance-level ambiguity.</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Key Findings -->
+  <h2>Key Findings</h2>
+  <div class="findings-grid">
+    <div class="finding-card">
+      <span class="icon">📉</span>
+      <h3>Multi-Person Gap</h3>
+      <p>All models degrade significantly in multi-person scenes. HICO-DET is &gt;60% single-person, masking this gap in aggregate mAP.</p>
+    </div>
+    <div class="finding-card">
+      <span class="icon">🔀</span>
+      <h3>Category C is Hardest</h3>
+      <p>When multiple objects of the same class are present with different subjects, models fail to correctly pair human–object instances.</p>
+    </div>
+    <div class="finding-card">
+      <span class="icon">🏷️</span>
+      <h3>Verb Errors Dominate</h3>
+      <p>Verb prediction is the most frequent error type. Many high-confidence false positives persist even above 0.5 threshold.</p>
+    </div>
+    <div class="finding-card">
+      <span class="icon">📦</span>
+      <h3>Object-Centric Bias</h3>
+      <p>Models favor verbs that dominate for a given object class — performance correlates with object-conditioned verb frequency, not global HOI frequency.</p>
+    </div>
+    <div class="finding-card">
+      <span class="icon">🔗</span>
+      <h3>Instance Representations</h3>
+      <p>HOLa and LAIN — which use instance-level features rather than region crops — exhibit lower pairing error rates, suggesting better spatial grounding.</p>
+    </div>
+    <div class="finding-card">
+      <span class="icon">📊</span>
+      <h3>Benchmark Limitation</h3>
+      <p>Standard mAP hides category-specific failures. Our structured analysis reveals error sources invisible in aggregated evaluation.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Acknowledgments -->
+  <h2>Acknowledgments</h2>
+  <div class="ack">
+    We are grateful for the support of the <strong>Ohio Supercomputer Center</strong> for providing computational resources. This work was supported in part by the <strong>Mississippi Impact Grant (MIG)</strong>, Office for Research and Economic Development, University of Mississippi.
+  </div>
+
+  <hr class="divider">
+
+  <!-- BibTeX -->
+  <h2 id="bibtex">BibTeX</h2>
+  <div class="bibtex-block"><span class="bibtex-key">@inproceedings{wang2026diaghoi,</span>
+  <span class="bibtex-key">  title</span>     = {<span class="bibtex-val">A Study of Failure Modes in Two-Stage Human--Object Interaction Detection</span>},
+  <span class="bibtex-key">  author</span>    = {<span class="bibtex-val">Wang, Lemeng and Lei, Qinqian and Bakshi, Vidhi and Yi, Daniel and
+               Liu, Yifan and Hou, Jiacheng and Mai, Zheda and Seng Hao, Asher and
+               Chao, Wei-Lun and Tan, Robby T. and Wang, Bo</span>},
+  <span class="bibtex-key">  booktitle</span> = {<span class="bibtex-val">CVPR Workshop</span>},
+  <span class="bibtex-key">  year</span>      = {<span class="bibtex-val">2026</span>},
+<span class="bibtex-key">}</span></div>
+
+</div>
+
+<footer>
+  DiagHOI &nbsp;·&nbsp; CVPR 2026 Workshop &nbsp;·&nbsp; 
+  Page template inspired by <a href="https://jinsuyoo.info/civet/">CIVET</a>
+</footer>
+
+</body>
+</html>
